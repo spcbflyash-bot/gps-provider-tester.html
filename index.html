@@ -236,6 +236,8 @@
                     <option value="">-- Select Provider --</option>
                     <option value="gtrophy">GTrophy</option>
                     <option value="intugine">Intugine</option>
+                    <option value="tbtrack">TBTrack</option>
+                    <option value="zonetrack">ZoneTrack</option>
                 </select>
             </div>
             
@@ -315,6 +317,22 @@
                 headers: {
                     'Authorization': 'Basic aktPU3A2QmQxOXJBOEx0MEVkTjR1dmFlNjlDS3BxMHV5UEdqSjVEZUVCeXVZbmtBTjlxcWFuYmN4ZEg2Q1N4UDpKT2Q0bm14SDFEMWJUMHpsaURpUlZpRFhLeTdHczk1MzJoaG1PaTBkdEJUbWVSWWlJQU02NjhLYzRuS3ZCeFo2'
                 }
+            },
+            
+            tbtrack: {
+                baseUrl: "https://tbtrack.in/gps/public/api/v1/vehicles/location/data",
+                params: {},
+                headers: {
+                    'username': "opgc_api"
+                }
+            },
+            
+            zonetrack: {
+                baseUrl: "http://aizonetrack.com/vehicle-service/public/api/ve1/vehicle",
+                params: {},
+                headers: {
+                    'X-API-KEY': '8t1OCQj5L1n7v7WxvYMYrNs1-pNJcbDiQ11WETA_PQk'
+                }
             }
         };
 
@@ -339,6 +357,22 @@
                 hirakud: {
                     headers: {
                         'Authorization': 'Basic aktPU3A2QmQxOXJBOEx0MEVkTjR1dmFlNjlDS3BxMHV5UEdqSjVEZUVCeXVZbmtBTjlxcWFuYmN4ZEg2Q1N4UDpKT2Q0bm14SDFEMWJUMHpsaURpUlZpRFhLeTdHczk1MzJoaG1PaTBkdEJUbWVSWWlJQU02NjhLYzRuS3ZCeFo2'
+                    }
+                }
+            },
+
+            tbtrack: {
+                opgc: {
+                    headers: {
+                        'username': 'opgc_api'
+                    }
+                }
+            },
+
+            zonetrack: {
+                opgc: {
+                    headers: {
+                        'X-API-KEY': '8t1OCQj5L1n7v7WxvYMYrNs1-pNJcbDiQ11WETA_PQk'
                     }
                 }
             }
