@@ -293,7 +293,12 @@
         </div>
         
         <div class="card">
-            <h2 style="margin-bottom: 10px;">📋 Activity Log</h2>
+            <h2 style="margin-bottom: 10px;">� Raw API Response</h2>
+            <pre id="rawResponse" class="log" style="max-height: 300px; white-space: pre-wrap; word-wrap: break-word;">No data yet...</pre>
+        </div>
+        
+        <div class="card">
+            <h2 style="margin-bottom: 10px;">�📋 Activity Log</h2>
             <div id="log" class="log"></div>
         </div>
     </div>
@@ -434,8 +439,13 @@
                 return;
             }
             
-            if (provider === 'gtrophy' && !imei) {
-                alert('Please enter IMEI for GTrophy');
+            if ((provider === 'gtrophy' || provider === 'tbtrack') && !imei) {
+                alert(`Please enter IMEI for ${provider}`);
+                return;
+            }
+            
+            if (provider === 'zonetrack' && !deviceId) {
+                alert('Please enter Device ID for ZoneTrack');
                 return;
             }
             
@@ -464,40 +474,79 @@
                     if (deviceId) {
                         url.searchParams.append('device_id', deviceId);
                     }
+                } else if (provider === 'tbtrack') {
+                    if (imei) {
+                        url.searchParams.append('imei', imei);
+                    }
+                } else if (provider === 'zonetrack') {
+                    if (deviceId) {
+                        url.searchParams.append('device_id', deviceId);
+                    }
                 }
                 
                 log(`URL: ${url.toString()}`, 'info');
                 
-                // Get headers
-                const headers = provider === 'intugine' && companyConfig.headers 
-                    ? companyConfig.headers 
-                    : apiConfig.headers;
+                // Get headers - use company-specific headers if available, otherwise use provider defaults
+                const headers = companyConfig.headers || apiConfig.headers || {};
+                log(`Headers: ${JSON.stringify(headers)}`, 'info');
                 
                 // Fetch data
-                const response = await fetch(url.toString(), {
-                    method: 'GET',
-                    headers: headers,
-                    mode: 'cors'
-                });
+                let response;
+                let data;
                 
-                log(`HTTP Status: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    log(`Response Body: ${errorText}`, 'error');
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}\n${errorText}`);
+                try {
+                    response = await fetch(url.toString(), {
+                        method: 'GET',
+                        headers: headers,
+                        mode: 'cors'
+                    });
+                    
+                    log(`HTTP Status: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+                    
+                    // Get response data regardless of status
+                    data = await response.json();
+                } catch (fetchError) {
+                    // Network error or CORS issue
+                    const errorResponse = {
+                        error: 'Network/CORS Error',
+                        message: fetchError.message,
+                        url: url.toString(),
+                        headers: headers,
+                        timestamp: new Date().toISOString()
+                    };
+                    document.getElementById('rawResponse').textContent = JSON.stringify(errorResponse, null, 2);
+                    log(`❌ Fetch failed: ${fetchError.message}`, 'error');
+                    log('This is likely a CORS or network error', 'error');
+                    throw fetchError;
                 }
                 
-                const data = await response.json();
-                log('✓ Response received successfully', 'success');
-                log(`Raw data: ${JSON.stringify(data).substring(0, 200)}...`, 'info');
+                // ALWAYS display raw response first
+                document.getElementById('rawResponse').textContent = JSON.stringify(data, null, 2);
+                log('✓ Response data received', 'success');
                 console.log('Full raw response:', data);
                 
-                // Process data based on provider
-                if (provider === 'intugine') {
-                    processIntugineData(data);
-                } else if (provider === 'gtrophy') {
-                    processGtrophyData(data);
+                if (!response.ok) {
+                    log(`⚠️ API returned error status: ${response.status}`, 'error');
+                    log(`Response: ${JSON.stringify(data)}`, 'error');
+                    showStatus(`API Error ${response.status}: Check Raw Response`, 'error');
+                    return; // Don't try to parse if error status
+                }
+                
+                // Try to process data based on provider (but don't fail if can't parse)
+                try {
+                    if (provider === 'intugine') {
+                        processIntugineData(data);
+                    } else if (provider === 'gtrophy') {
+                        processGtrophyData(data);
+                    } else if (provider === 'tbtrack') {
+                        processTBTrackData(data);
+                    } else if (provider === 'zonetrack') {
+                        processZoneTrackData(data);
+                    }
+                } catch (parseError) {
+                    log(`⚠️ Parsing failed: ${parseError.message}`, 'error');
+                    log('Check Raw API Response section for full data', 'info');
+                    showStatus('Data received but could not parse location', 'idle');
                 }
                 
             } catch (error) {
@@ -568,6 +617,30 @@
                 
             } catch (error) {
                 throw new Error(`GTrophy parsing error: ${error.message}`);
+            }
+        }
+
+        // Process TBTrack response
+        function processTBTrackData(data) {
+            try {
+                log('TBTrack response received - implement parsing logic', 'info');
+                log(`Full response: ${JSON.stringify(data)}`, 'info');
+                // TODO: Implement TBTrack parsing based on actual API response structure
+                throw new Error('TBTrack parsing not yet implemented - check raw response');
+            } catch (error) {
+                throw new Error(`TBTrack parsing error: ${error.message}`);
+            }
+        }
+
+        // Process ZoneTrack response
+        function processZoneTrackData(data) {
+            try {
+                log('ZoneTrack response received - implement parsing logic', 'info');
+                log(`Full response: ${JSON.stringify(data)}`, 'info');
+                // TODO: Implement ZoneTrack parsing based on actual API response structure
+                throw new Error('ZoneTrack parsing not yet implemented - check raw response');
+            } catch (error) {
+                throw new Error(`ZoneTrack parsing error: ${error.message}`);
             }
         }
 
