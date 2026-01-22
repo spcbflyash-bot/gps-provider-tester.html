@@ -236,8 +236,11 @@
                     <option value="">-- Select Provider --</option>
                     <option value="gtrophy">GTrophy</option>
                     <option value="intugine">Intugine</option>
+                    <option value="nigraani">Nigraani</option>
                     <option value="tbtrack">TBTrack</option>
                     <option value="zonetrack">ZoneTrack</option>
+                    <option value="gpsnetra">GPS Netra</option>
+                    <option value="liveratrack">Livera Track</option>
                 </select>
             </div>
             
@@ -249,12 +252,12 @@
             </div>
             
             <div class="form-group">
-                <label for="deviceId">Device ID (for Intugine)</label>
+                <label for="deviceId">Device ID (for Intugine, ZoneTrack, Livera Track)</label>
                 <input type="text" id="deviceId" placeholder="Enter device ID">
             </div>
             
             <div class="form-group">
-                <label for="imei">IMEI Number (for GTrophy)</label>
+                <label for="imei">IMEI Number (for GTrophy, GPS Netra, Nigraani, TBTrack)</label>
                 <input type="text" id="imei" placeholder="Enter IMEI number">
             </div>
             
@@ -324,8 +327,16 @@
                 }
             },
             
+            nigraani: {
+                baseUrl: "http://x.nigraani.com/gps/public/api/v1/vehicles/location/data",
+                params: {},
+                headers: {
+                    'username': "opgc_api"
+                }
+            },
+            
             tbtrack: {
-                baseUrl: "https://tbtrack.in/gps/public/api/v1/vehicles/location/data",
+                baseUrl: "http://x.nigraani.com/gps/public/api/v1/vehicles/location/data",
                 params: {},
                 headers: {
                     'username': "opgc_api"
@@ -338,6 +349,21 @@
                 headers: {
                     'X-API-KEY': '8t1OCQj5L1n7v7WxvYMYrNs1-pNJcbDiQ11WETA_PQk'
                 }
+            },
+            
+            gpsnetra: {
+                baseUrl: "https://www.gpsnetra.com/api/companyvehiclelatestinfo",
+                params: {
+                    'token': 'B9E743C1C53AA78BFA80BFB73686E2EE22847F62EE305AB4964DF9F8C92D4674',
+                    'group': 'Shrinivas'
+                },
+                headers: {}
+            },
+            
+            liveratrack: {
+                baseUrl: "https://api.liveratrack.com/devices",
+                params: {},
+                headers: {}
             }
         };
 
@@ -366,6 +392,14 @@
                 }
             },
 
+            nigraani: {
+                opgc: {
+                    headers: {
+                        'username': 'opgc_api'
+                    }
+                }
+            },
+
             tbtrack: {
                 opgc: {
                     headers: {
@@ -378,6 +412,21 @@
                 opgc: {
                     headers: {
                         'X-API-KEY': '8t1OCQj5L1n7v7WxvYMYrNs1-pNJcbDiQ11WETA_PQk'
+                    }
+                }
+            },
+
+            gpsnetra: {
+                shrinivas: {
+                    token: "B9E743C1C53AA78BFA80BFB73686E2EE22847F62EE305AB4964DF9F8C92D4674",
+                    group: "Shrinivas"
+                }
+            },
+
+            liveratrack: {
+                opgc: {
+                    headers: {
+                        'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJvcGdjLnNoaXZhYXlAdnRzLmxpdmVyYXRyYWNrLmNvbSIsImV4cCI6MTgwMDAwODkxMywiaWF0IjoxNzY4NDcyOTEzfQ.UAA0ozIbtfXX4iLpEFgCZxZoAX18W9GywYGOyZoPKKU'
                     }
                 }
             }
@@ -434,18 +483,13 @@
                 return;
             }
             
-            if (provider === 'intugine' && !deviceId) {
-                alert('Please enter Device ID for Intugine');
+            if ((provider === 'intugine' || provider === 'zonetrack' || provider === 'liveratrack') && !deviceId) {
+                alert(`Please enter Device ID for ${provider}`);
                 return;
             }
             
-            if ((provider === 'gtrophy' || provider === 'tbtrack') && !imei) {
+            if ((provider === 'gtrophy' || provider === 'gpsnetra' || provider === 'nigraani' || provider === 'tbtrack') && !imei) {
                 alert(`Please enter IMEI for ${provider}`);
-                return;
-            }
-            
-            if (provider === 'zonetrack' && !deviceId) {
-                alert('Please enter Device ID for ZoneTrack');
                 return;
             }
             
@@ -464,7 +508,7 @@
                 const url = new URL(apiConfig.baseUrl);
                 
                 // Add company-specific params
-                if (provider === 'gtrophy' && companyConfig.token && companyConfig.group) {
+                if ((provider === 'gtrophy' || provider === 'gpsnetra') && companyConfig.token && companyConfig.group) {
                     url.searchParams.append('token', companyConfig.token);
                     url.searchParams.append('group', companyConfig.group);
                     if (imei) {
@@ -474,11 +518,11 @@
                     if (deviceId) {
                         url.searchParams.append('device_id', deviceId);
                     }
-                } else if (provider === 'tbtrack') {
+                } else if (provider === 'nigraani' || provider === 'tbtrack') {
                     if (imei) {
                         url.searchParams.append('imei', imei);
                     }
-                } else if (provider === 'zonetrack') {
+                } else if (provider === 'zonetrack' || provider === 'liveratrack') {
                     if (deviceId) {
                         url.searchParams.append('device_id', deviceId);
                     }
@@ -538,10 +582,16 @@
                         processIntugineData(data);
                     } else if (provider === 'gtrophy') {
                         processGtrophyData(data);
+                    } else if (provider === 'nigraani') {
+                        processNigraaniData(data);
                     } else if (provider === 'tbtrack') {
                         processTBTrackData(data);
                     } else if (provider === 'zonetrack') {
                         processZoneTrackData(data);
+                    } else if (provider === 'gpsnetra') {
+                        processGpsnetraData(data);
+                    } else if (provider === 'liveratrack') {
+                        processLiveratrackData(data);
                     }
                 } catch (parseError) {
                     log(`⚠️ Parsing failed: ${parseError.message}`, 'error');
@@ -620,13 +670,57 @@
             }
         }
 
+        // Process Nigraani response
+        function processNigraaniData(data) {
+            try {
+                if (!data?.data || !Array.isArray(data.data)) {
+                    throw new Error('No data array returned from Nigraani API');
+                }
+                
+                const gpsData = data.data[0];
+                if (!gpsData) {
+                    throw new Error('Empty data array from Nigraani');
+                }
+                
+                const lat = gpsData.latitude;
+                const lng = gpsData.longitude;
+                const speed = gpsData.speed || 0;
+                const timestamp = gpsData.timestamp ? new Date(gpsData.timestamp).toISOString() : new Date().toISOString();
+                
+                if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+                    throw new Error('Invalid coordinates in response');
+                }
+                
+                updateLocation(lat, lng, speed, timestamp);
+                log(`Location updated: ${lat}, ${lng} @ ${speed} km/h`, 'success');
+            } catch (error) {
+                throw new Error(`Nigraani parsing error: ${error.message}`);
+            }
+        }
+
         // Process TBTrack response
         function processTBTrackData(data) {
             try {
-                log('TBTrack response received - implement parsing logic', 'info');
-                log(`Full response: ${JSON.stringify(data)}`, 'info');
-                // TODO: Implement TBTrack parsing based on actual API response structure
-                throw new Error('TBTrack parsing not yet implemented - check raw response');
+                if (!data?.data || !Array.isArray(data.data)) {
+                    throw new Error('No data array returned from TBTrack API');
+                }
+                
+                const gpsData = data.data[0];
+                if (!gpsData) {
+                    throw new Error('Empty data array from TBTrack');
+                }
+                
+                const lat = gpsData.latitude;
+                const lng = gpsData.longitude;
+                const speed = gpsData.speed || 0;
+                const timestamp = gpsData.timestamp ? new Date(gpsData.timestamp).toISOString() : new Date().toISOString();
+                
+                if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+                    throw new Error('Invalid coordinates in response');
+                }
+                
+                updateLocation(lat, lng, speed, timestamp);
+                log(`Location updated: ${lat}, ${lng} @ ${speed} km/h`, 'success');
             } catch (error) {
                 throw new Error(`TBTrack parsing error: ${error.message}`);
             }
@@ -635,12 +729,81 @@
         // Process ZoneTrack response
         function processZoneTrackData(data) {
             try {
-                log('ZoneTrack response received - implement parsing logic', 'info');
-                log(`Full response: ${JSON.stringify(data)}`, 'info');
-                // TODO: Implement ZoneTrack parsing based on actual API response structure
-                throw new Error('ZoneTrack parsing not yet implemented - check raw response');
+                if (!data?.data || !Array.isArray(data.data)) {
+                    throw new Error('No data array returned from ZoneTrack API');
+                }
+                
+                const gpsData = data.data[0];
+                if (!gpsData) {
+                    throw new Error('Empty data array from ZoneTrack');
+                }
+                
+                const lat = gpsData.lat;
+                const lng = gpsData.lng;
+                const speed = gpsData.speed || 0;
+                const timestamp = gpsData.lastUpdated || new Date().toISOString();
+                
+                if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+                    throw new Error('Invalid coordinates in response');
+                }
+                
+                updateLocation(lat, lng, speed, timestamp);
+                log(`Location updated: ${lat}, ${lng} @ ${speed} km/h`, 'success');
             } catch (error) {
                 throw new Error(`ZoneTrack parsing error: ${error.message}`);
+            }
+        }
+
+        // Process GPS Netra response
+        function processGpsnetraData(data) {
+            try {
+                if (!Array.isArray(data) || data.length === 0) {
+                    throw new Error('No data array returned from GPS Netra API');
+                }
+                
+                const gpsData = data[0];
+                
+                const lat = parseFloat(gpsData.lat);
+                const lng = parseFloat(gpsData.long);
+                const speed = parseFloat(gpsData.speed || 0);
+                const timestamp = gpsData.date || new Date().toISOString();
+                
+                if (isNaN(lat) || isNaN(lng)) {
+                    throw new Error('Invalid coordinates in response');
+                }
+                
+                updateLocation(lat, lng, speed, timestamp);
+                log(`Location updated: ${lat}, ${lng} @ ${speed} km/h`, 'success');
+            } catch (error) {
+                throw new Error(`GPS Netra parsing error: ${error.message}`);
+            }
+        }
+
+        // Process Livera Track response
+        function processLiveratrackData(data) {
+            try {
+                const dataArray = Array.isArray(data) ? data : (data.data ? data.data : [data]);
+                
+                if (dataArray.length === 0) {
+                    throw new Error('No data returned from Livera Track API');
+                }
+                
+                const gpsData = dataArray[0];
+                
+                // Try multiple field variations
+                const lat = gpsData.latitude || gpsData.lat || gpsData.position?.latitude;
+                const lng = gpsData.longitude || gpsData.lng || gpsData.long || gpsData.position?.longitude;
+                const speed = gpsData.speed || 0;
+                const timestamp = gpsData.timestamp || gpsData.deviceTime || gpsData.fixTime || new Date().toISOString();
+                
+                if (!lat || !lng || isNaN(parseFloat(lat)) || isNaN(parseFloat(lng))) {
+                    throw new Error('Invalid or missing coordinates in response');
+                }
+                
+                updateLocation(parseFloat(lat), parseFloat(lng), parseFloat(speed), timestamp);
+                log(`Location updated: ${lat}, ${lng} @ ${speed} km/h`, 'success');
+            } catch (error) {
+                throw new Error(`Livera Track parsing error: ${error.message}`);
             }
         }
 
